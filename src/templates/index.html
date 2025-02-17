@@ -1,0 +1,409 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+    <title>Ring Buffer Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .buffer-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background-color: white;
+            position: relative;
+        }
+
+        .cell.head {
+            border-color: #0b529e;
+        }
+
+        .cell.tail {
+            border-color: #10a031;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .write-btn {
+            background-color: #0b529e;
+        }
+
+        .read-btn {
+            background-color: #10a031;
+        }
+
+        .reset-btn {
+            background-color: #a32834;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        .legend {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="text-align: center;">Ring Buffer Visualization</h1>
+
+    <div class="legend">
+        <div class="legend-item">
+            <span class="legend-color" style="border-color: #0b529e;"></span>
+            Head (Write Position)
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="border-color: #10a031;"></span>
+            Tail (Read Position)
+        </div>
+    </div>
+
+    <div class="buffer-container" id="buffer"></div>
+
+    <div class="status" id="status"></div>
+
+    <div class="controls">
+        <button class="write-btn" onclick="writeBuffer()">Write</button>
+        <button class="read-btn" onclick="readBuffer()">Read</button>
+        <button class="reset-btn" onclick="resetBuffer()">Reset</button>
+    </div>
+
+    <script>
+        // Updated JavaScript with error handling
+        function updateUI(data) {
+            const bufferDiv = document.getElementById('buffer');
+            const statusDiv = document.getElementById('status');
+
+            // Update buffer visualization
+            bufferDiv.innerHTML = data.buffer.map((value, index) => `
+                <div class="cell ${index === data.head ? 'head' : ''} ${index === data.tail && data.size > 0 ? 'tail' : ''}">
+                    ${value === null ? '-' : value}
+                </div>
+            `).join('');
+
+            // Update status
+            let status = `Size: ${data.size} / ${data.capacity}<br>`;
+            if (data.size === 0) {
+                status += 'Buffer is empty';
+            } else if (data.size === data.capacity) {
+                status += 'Buffer is full';
+            } else {
+                status += 'Buffer has space';
+            }
+            statusDiv.innerHTML = status;
+        }
+
+        async function handleRequest(url, method = 'GET') {
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('status').innerHTML = 'Error: Could not connect to server';
+            }
+        }
+
+        // Updated event handlers
+        function writeBuffer() {
+            handleRequest('/write', 'POST');
+        }
+
+        function readBuffer() {
+            handleRequest('/read', 'POST');
+        }
+
+        function resetBuffer() {
+            handleRequest('/reset', 'POST');
+        }
+
+        // Initial state
+        handleRequest('/state');
+    </script>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Ring Buffer Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .buffer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 20px 0;
+            width: 100%;
+            height: 300px;
+        }
+
+        .ring {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            transform: rotate(0deg);
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background-color: white;
+            position: absolute;
+            transform-origin: center;
+            transition: transform 0.3s ease;
+            /* Add smooth transition for movement */
+        }
+
+        .cell.head {
+            border-color: #0b529e;
+        }
+
+        .cell.tail {
+            border-color: #10a031;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .write-btn {
+            background-color: #0b529e;
+        }
+
+        .read-btn {
+            background-color: #10a031;
+        }
+
+        .reset-btn {
+            background-color: #a32834;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        .legend {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="text-align: center;">Ring Buffer Visualization</h1>
+
+    <div class="legend">
+        <div class="legend-item">
+            <span class="legend-color" style="border-color: #0b529e;"></span>
+            Head (Write Position)
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="border-color: #10a031;"></span>
+            Tail (Read Position)
+        </div>
+    </div>
+
+    <div class="buffer-container" id="buffer">
+        <div class="ring" id="ring"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="controls">
+        <button class="write-btn" onclick="writeBuffer()">Write</button>
+        <button class="read-btn" onclick="readBuffer()">Read</button>
+        <button class="reset-btn" onclick="resetBuffer()">Reset</button>
+    </div>
+
+    <script>
+        function updateUI(data) {
+            const ringDiv = document.getElementById('ring');
+            const statusDiv = document.getElementById('status');
+
+            // Clear the existing cells
+            ringDiv.innerHTML = '';
+
+            // Update buffer visualization
+            const angleStep = 360 / data.capacity; // Full circle divided by the number of slots
+
+            data.buffer.forEach((value, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.classList.add('cell');
+
+                if (index === data.head) {
+                    cellDiv.classList.add('head');
+                }
+
+                if (index === data.tail && data.size > 0) {
+                    cellDiv.classList.add('tail');
+                }
+
+                cellDiv.innerHTML = value === null ? '-' : value;
+
+                // Position each cell in a circle
+                const angle = angleStep * index;
+                const radius = 120; // Radius of the circle, distance from the center
+                const x = radius * Math.cos(Math.PI * angle / 180);
+                const y = radius * Math.sin(Math.PI * angle / 180);
+
+                // Position cells evenly around the circle
+                cellDiv.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+
+                ringDiv.appendChild(cellDiv);
+            });
+
+            // Update status
+            let status = `Size: ${data.size} / ${data.capacity}<br>`;
+            if (data.size === 0) {
+                status += 'Buffer is empty';
+            } else if (data.size === data.capacity) {
+                status += 'Buffer is full';
+            } else {
+                status += 'Buffer has space';
+            }
+            statusDiv.innerHTML = status;
+        }
+
+        async function handleRequest(url, method = 'GET') {
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('status').innerHTML = 'Error: Could not connect to server';
+            }
+        }
+
+        function writeBuffer() {
+            handleRequest('/write', 'POST');
+        }
+
+        function readBuffer() {
+            handleRequest('/read', 'POST');
+        }
+
+        function resetBuffer() {
+            handleRequest('/reset', 'POST');
+        }
+
+        // Initial state
+        handleRequest('/state');
+    </script>
+</body>
+
+</html>
